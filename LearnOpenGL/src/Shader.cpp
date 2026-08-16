@@ -23,7 +23,8 @@ void Shader::loadSources(const std::string &vertexFile, const std::string &fragm
 	vertexShader.close();
 
 	#ifdef _DEBUG
-	std::cout << vertexContent + "\n";
+		std::cout << "Vertex Shader: \n";
+		std::cout << vertexContent + "\n";
 	#endif
 
 	std::ifstream fragmentShader(fragmentFile);
@@ -38,6 +39,11 @@ void Shader::loadSources(const std::string &vertexFile, const std::string &fragm
 		fragmentContent += line + "\n";
 	}
 	fragmentShader.close();
+
+	#ifdef _DEBUG
+		std::cout << "Fragment Shader: \n";
+		std::cout << vertexContent + "\n";
+	#endif
 
 	compile(vertexContent, GL_VERTEX_SHADER);
 	compile(fragmentContent, GL_FRAGMENT_SHADER);
