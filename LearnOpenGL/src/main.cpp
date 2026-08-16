@@ -146,11 +146,8 @@ int main() {
 	}
 	
 	auto shader = Shader{};
-	shader.loadShaderSource("resources/shaders/vertex.vert");
-	shader.compileShader(GL_VERTEX_SHADER);
-	shader.loadShaderSource("resources/shaders/fragment.frag");
-	shader.compileShader(GL_FRAGMENT_SHADER);
-	shader.linkProgram();
+	shader.loadSources("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
+	shader.link();
 
 	auto triangleVAO0 = createTriangleVAO(Vertice{ -1.2f, 0.5f, 0.0f }, Vertice{ -0.6f, 0.5f, 0.0f }, Vertice{ -0.9f, -0.5f, 0.0f });
 	auto triangleVAO1 = createTriangleVAO(Vertice{ -0.8f, -0.5f, 0.0f }, Vertice{ -0.2f, -0.5f, 0.0f }, Vertice{ -0.5f, 0.5f, 0.0f });
@@ -165,7 +162,7 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		inputHandler();
 
-		shader.useShader();
+		shader.use();
 
 		float time = (float)glfwGetTime() * 3.5f;
 		float color = (sin(time) / 2.0f) + 0.5f;

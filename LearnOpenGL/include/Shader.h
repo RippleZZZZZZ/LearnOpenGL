@@ -7,15 +7,14 @@
 class Shader
 {
 private:
-	mutable std::string shaderSource;
-	unsigned int shaderProgram;
-	void deleteShader(unsigned int shaderID) const;
+	mutable unsigned int shaderProgram;
+	void remove(unsigned int shaderID) const;
 public:
 	Shader();
-	void loadShaderSource(const std::string &shaderFile);
-	void compileShader(GLenum type) const;
-	void linkProgram() const;
-	void useShader() const;
+	void loadSources(const std::string &vertexFile, const std::string &fragmentFile) const;
+	void compile(const std::string &shaderSource, GLenum type) const;
+	void link() const;
+	void use() const;
 
 	unsigned int getProgram() const;
 };

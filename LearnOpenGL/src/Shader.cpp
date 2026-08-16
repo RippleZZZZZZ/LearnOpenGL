@@ -1,6 +1,6 @@
 #include "Shader.h"
 
-void Shader::deleteShader(unsigned int shaderID) const {
+void Shader::remove(unsigned int shaderID) const {
 	glDeleteShader(shaderID);
 }
 
@@ -8,29 +8,42 @@ Shader::Shader() {
 	shaderProgram = glCreateProgram();
 }
 
-void Shader::loadShaderSource(const std::string &shaderFile) {
-	std::ifstream inputShader(shaderFile);
-	if (!inputShader.is_open()) {
-		std::cerr << "failed to open shader file\n";
+void Shader::loadSources(const std::string &vertexFile, const std::string &fragmentFile) const {
+	std::ifstream vertexShader(vertexFile);
+	if (!vertexShader.is_open()) {
+		std::cerr << "failed to open vertex shader file\n";
 		return;
 	}
 
-	std::string shaderContent = "";
+	std::string vertexContent = "";
 	std::string line = "";
-	while (std::getline(inputShader, line)) {
-		shaderContent += line + "\n";
+	while (std::getline(vertexShader, line)) {
+		vertexContent += line + "\n";
 	}
-	inputShader.close();
+	vertexShader.close();
 
 	#ifdef _DEBUG
-	std::cout << shaderContent + "\n";
+	std::cout << vertexContent + "\n";
 	#endif
 
+	std::ifstream fragmentShader(fragmentFile);
+	if (!fragmentShader.is_open()) {
+		std::cerr << "failed to open fragment shader file\n";
+		return;
+	}
 
-	shaderSource = shaderContent;
+	std::string fragmentContent = "";
+	line = "";
+	while (std::getline(fragmentShader, line)) {
+		fragmentContent += line + "\n";
+	}
+	fragmentShader.close();
+
+	compile(vertexContent, GL_VERTEX_SHADER);
+	compile(fragmentContent, GL_FRAGMENT_SHADER);
 }
 
-void Shader::compileShader(GLenum shaderType) const {
+void Shader::compile(const std::string &shaderSource, GLenum shaderType) const {
 	const char* source = shaderSource.c_str();
 	unsigned int shaderID = glCreateShader(shaderType);
 	glShaderSource(shaderID, 1, &source, NULL);
@@ -50,14 +63,14 @@ void Shader::compileShader(GLenum shaderType) const {
 
 	glAttachShader(shaderProgram, shaderID);
 
-	deleteShader(shaderID);
+	remove(shaderID);
 }
 
-void Shader::linkProgram() const {
+void Shader::link() const {
 	glLinkProgram(shaderProgram);
 }
 
-void Shader::useShader() const {
+void Shader::use() const {
 	glUseProgram(shaderProgram);
 }
 
