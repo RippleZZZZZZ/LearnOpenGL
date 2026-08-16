@@ -149,6 +149,7 @@ int main() {
 	shader.loadSources("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
 	shader.link();
 
+	// demo
 	auto triangleVAO0 = createTriangleVAO(Vertice{ -1.2f, 0.5f, 0.0f }, Vertice{ -0.6f, 0.5f, 0.0f }, Vertice{ -0.9f, -0.5f, 0.0f });
 	auto triangleVAO1 = createTriangleVAO(Vertice{ -0.8f, -0.5f, 0.0f }, Vertice{ -0.2f, -0.5f, 0.0f }, Vertice{ -0.5f, 0.5f, 0.0f });
 	auto triangleVAO2 = createTriangleVAO(Vertice{ -0.4f, 0.5f, 0.0f }, Vertice{ 0.2f, 0.5f, 0.0f }, Vertice{ -0.1f, -0.5f, 0.0f });
