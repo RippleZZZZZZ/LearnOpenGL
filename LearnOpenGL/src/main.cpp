@@ -4,6 +4,9 @@
 #include <array>
 #include "Shader.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "STB/stb_image.h"
+
 struct Vertice {
 	float x;
 	float y;
@@ -24,79 +27,7 @@ static void inputHandler() {
 	}
 }
 
-static unsigned int compileShader(GLenum type, const char* source, unsigned int shaderProgram) {
-	unsigned int shaderID = glCreateShader(type);
-	glShaderSource(shaderID, 1, &source, NULL);
-	glCompileShader(shaderID);
-
-	int success = NULL;
-	char infoLog[512];
-	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
-
-	if (!success) {
-		glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
-		std::cerr << "Failed to compile shader " << type << ": " << infoLog << "\n";
-	}
-
-	glAttachShader(shaderProgram, shaderID);
-	return shaderID;
-}
-
-static unsigned int createLetterEVAO() {
-	std::array<float, 42> vertices{
-		-0.5f,  0.8f, 0.0f, // top base of E
-		-0.3f,  0.8f, 0.0f, // top base of E
-		-0.3f, -0.8f, 0.0f, // bottom base of E
-		-0.5f, -0.8f, 0.0f, // bottom base of E
-		 0.5f,  0.8f, 0.0f, 
-		 0.5f,  0.6f, 0.0f, 
-		-0.3f,  0.6f, 0.0f, 
-		-0.3f,  0.1f, 0.0f, 
-		 0.5f,  0.1f, 0.0f, 
-		 0.5f, -0.1f, 0.0f,  
-		-0.3f, -0.1f, 0.0f, 
-		-0.3f, -0.6f, 0.0f,
-		 0.5f, -0.6f, 0.0f,
-		 0.5f, -0.8f, 0.0f,
-	};
-
-	std::array<unsigned int, 24> indices{
-		0, 1, 2,
-		0, 3, 2,
-		1, 4, 6,
-		4, 5, 6,
-		7, 8, 10,
-		8, 9, 10,
-		11, 12, 2,
-		12, 13, 2
-	};
-
-	unsigned int VAO = NULL;
-	unsigned int VBO = NULL;
-	unsigned int EBO = NULL;
-
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-	glGenVertexArrays(1, &VAO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(1, 0);
-	glBindVertexArray(0);
-	
-	return VAO;
-}
-
-static unsigned int createTriangleVAO(Vertice bottomLeft, Vertice bottomRight, Vertice top) {
+[[nodiscard]] static unsigned int createTriangleVAO(Vertice bottomLeft, Vertice bottomRight, Vertice top) {
 	std::array<float, 18> vertices{
 		bottomLeft.x, bottomLeft.y, bottomLeft.z,
 		bottomRight.x, bottomRight.y, bottomRight.z,
@@ -121,6 +52,73 @@ static unsigned int createTriangleVAO(Vertice bottomLeft, Vertice bottomRight, V
 	glBindVertexArray(0);
 
 	return VAO;
+}
+
+[[nodiscard]] static unsigned int createRectangleVAO() {
+	std::array<float, 30> vertices{
+		-0.4f, -0.4f, 0.0f,		0.0f, 0.0f, 0.0f, 
+		 0.4f, -0.4f, 0.0f,		1.0f, 0.0f, 0.0f,
+		 0.4f,  0.4f, 0.0f,		1.0f, 1.0f, 0.0f,
+		-0.4f,  0.4f, 0.0f,		0.0f, 1.0f, 0.0f
+
+	};
+
+	std::array<unsigned int, 6> indices{
+		0, 1, 3,
+		1, 2, 3
+	};
+
+	unsigned int VAO, VBO, EBO;
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+	glGenVertexArrays(1, &VAO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(0));
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(1, 0);
+	glBindVertexArray(0);
+
+	return VAO;
+}
+
+[[nodiscard]] static unsigned int createTexture(const std::string &file) {
+	unsigned int texture;
+	glGenTextures(1, &texture);
+
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	const char* fileLocation = file.c_str();
+	unsigned char* data = stbi_load(fileLocation, &width, &height, &nrChannels, 0);
+
+	if (!data) {
+		std::cerr << "failed to load image data: " << stbi_failure_reason() << "\n";
+		return 0;
+	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	
+	stbi_image_free(data);
+	return texture;
 }
 
 int main() {
@@ -149,53 +147,19 @@ int main() {
 	shader.loadSources("resources/shaders/vertex.vert", "resources/shaders/fragment.frag");
 	shader.link();
 
-	// demo
-	auto triangleVAO0 = createTriangleVAO(Vertice{ -1.2f, 0.5f, 0.0f }, Vertice{ -0.6f, 0.5f, 0.0f }, Vertice{ -0.9f, -0.5f, 0.0f });
-	auto triangleVAO1 = createTriangleVAO(Vertice{ -0.8f, -0.5f, 0.0f }, Vertice{ -0.2f, -0.5f, 0.0f }, Vertice{ -0.5f, 0.5f, 0.0f });
-	auto triangleVAO2 = createTriangleVAO(Vertice{ -0.4f, 0.5f, 0.0f }, Vertice{ 0.2f, 0.5f, 0.0f }, Vertice{ -0.1f, -0.5f, 0.0f });
-	auto triangleVAO3 = createTriangleVAO(Vertice{ 0.0f, -0.5f, 0.0f }, Vertice{ 0.6f, -0.5f, 0.0f }, Vertice{ 0.3f, 0.5f, 0.0f });
-	auto triangleVAO4 = createTriangleVAO(Vertice{ 0.4f, 0.5f, 0.0f }, Vertice{ 1.0f, 0.5f, 0.0f }, Vertice{ 0.7f, -0.5f, 0.0f });
-
-	float xPos = 0.1f;
+	auto rectangleVAO = createRectangleVAO();
+	auto texture = createTexture("resources/textures/duhh.png");
 
 	while (!glfwWindowShouldClose(window)) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		inputHandler();
 
 		shader.use();
-
-		float time = (float)glfwGetTime() * 3.5f;
-		float color = (sin(time) / 2.0f) + 0.5f;
-		auto fragmentUniform = glGetUniformLocation(shader.getProgram(), "color");
-		glUniform3f(fragmentUniform, color, color, color);
-
-		glBindVertexArray(triangleVAO0);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		color = (sin(time - 0.9f) / 2.0f) + 0.5f;
-		glUniform3f(fragmentUniform, color, color, color);
-
-		glBindVertexArray(triangleVAO1);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		color = (sin(time - 1.8f) / 2.0f) + 0.5f;
-		glUniform3f(fragmentUniform, color, color, color);
-
-		glBindVertexArray(triangleVAO2);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		color = (sin(time - 2.7f) / 2.0f) + 0.5f;
-		glUniform3f(fragmentUniform, color, color, color);
-
-		glBindVertexArray(triangleVAO3);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		color = (sin(time - 3.6f) / 2.0f) + 0.5f;
-		glUniform3f(fragmentUniform, color, color, color);
-
-		glBindVertexArray(triangleVAO4);
-		glDrawArrays(GL_TRIANGLES, 0, 4);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindVertexArray(rectangleVAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

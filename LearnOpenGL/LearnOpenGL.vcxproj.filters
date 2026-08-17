@@ -9,9 +9,15 @@
     <ClInclude Include="include\glad\glad.h" />
     <ClInclude Include="include\KHR\khrplatform.h" />
     <ClInclude Include="include\Shader.h" />
+    <ClInclude Include="include\STB\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="resources\shaders\vertex.vert" />
     <Text Include="resources\shaders\fragment.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\textures\tevorOpenGL.png" />
+    <Image Include="resources\textures\pfpEnhanced.jpg" />
+    <Image Include="resources\textures\duhh.png" />
   </ItemGroup>
 </Project>

@@ -1,12 +1,11 @@
 #version 330 core
 
 layout (location = 0) in vec3 pos;
+layout (location = 1) in vec2 texturePos;
 
-out vec3 outPos;
-
-uniform vec2 offset;
+out vec2 texPos;
 
 void main() {
-	gl_Position = vec4(pos.x + offset.x, pos.y + offset.y, pos.z, 1.0f);
-	outPos = pos;
+	gl_Position = vec4(pos.x, pos.y, pos.z, 1.0f);
+	texPos = texturePos;
 }

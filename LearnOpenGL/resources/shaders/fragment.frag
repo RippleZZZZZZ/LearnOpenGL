@@ -1,11 +1,11 @@
 #version 330 core
 
-in vec3 outPos;
+in vec2 texPos;
 
-out vec4 outputColor;
+out vec4 outputDisplay;
 
-uniform vec3 color;
+uniform sampler2D textureID;
 
 void main() {
-	outputColor = vec4(color, 1.0f);
+	outputDisplay = texture(textureID, texPos);
 }
